@@ -71,8 +71,21 @@ public class Sharer {
     	}
     	dir.delete();
     	//Tells the system to refresh the available files - this removes the colornamer folder from the gallery
-    	context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.parse("file://" + Environment.getExternalStorageDirectory())));
-    	context.unbindService(scanner);
+    	
+    	//http://stackoverflow.com/questions/18624235/android-refreshing-the-gallery-after-saving-new-images
+    	
+    	MediaScannerConnection.scanFile(context,
+                new String[] { ""+Environment.getExternalStorageDirectory()}, null,
+                new MediaScannerConnection.OnScanCompletedListener() {
+                    public void onScanCompleted(String path, Uri uri) {
+                        Log.i("ExternalStorage", "Scanned " + path + ":");
+                        Log.i("ExternalStorage", "-> uri=" + uri);
+                    }
+                });
+    	
+    	
+    	//context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.parse("file://" + Environment.getExternalStorageDirectory())));
+    	//context.unbindService(scanner);
 
 	}
 	

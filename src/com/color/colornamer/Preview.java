@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.CameraInfo;
@@ -32,6 +33,7 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback, PreviewCall
     byte[] buffer;
     int bufferSize;
     private boolean isFrontCamera = false;
+    boolean lightOn = false;
     
     private boolean isPaused = false;
           
@@ -85,7 +87,35 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback, PreviewCall
             mCamera.release();  
             mCamera = null;  
         }  
-    }  
+    } 
+    
+    public void flash() {
+
+        if(getContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)){
+            Parameters p = mCamera.getParameters();
+
+            if(!lightOn){
+                lightOn = true;
+                mCamera.stopPreview();
+                mCamera.setPreviewCallbackWithBuffer(this);//setPreviewCallback(this);//setPreviewCallbackWithBuffer(this);
+
+                p.setFlashMode(Parameters.FLASH_MODE_TORCH);
+                mCamera.setParameters(p);
+                mCamera.startPreview();
+            }else{
+                lightOn = false;
+                mCamera.stopPreview();
+		mCamera.setPreviewCallbackWithBuffer(this);//setPreviewCallback(this);//setPreviewCallbackWithBuffer(this);
+
+
+                p.setFlashMode(Parameters.FLASH_MODE_OFF);
+                mCamera.setParameters(p);
+                mCamera.startPreview();
+            }
+
+        }
+    }
+    
   
     public void surfaceDestroyed(SurfaceHolder holder) {  
         // Surface will be destroyed when we return, so stop the preview.  
@@ -168,12 +198,18 @@ class Preview extends SurfaceView implements SurfaceHolder.Callback, PreviewCall
     public void pause(boolean isPaused) {
     	this.isPaused = isPaused;
     	if (isPaused) {
+            parameters.setFlashMode(Parameters.FLASH_MODE_OFF);
+            mCamera.setParameters(parameters);
     		mCamera.stopPreview();
     	} else {
     		if (mCamera != null) {
 	    		mCamera.setPreviewCallbackWithBuffer(this);//setPreviewCallback(this);//setPreviewCallbackWithBuffer(this);
-	    		mCamera.setParameters(parameters);
-	    		mCamera.startPreview();
+
+                if(lightOn)
+                    parameters.setFlashMode(Parameters.FLASH_MODE_TORCH);
+
+                mCamera.setParameters(parameters);
+                mCamera.startPreview();
     		}
     	}
     }
